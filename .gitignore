@@ -103,7 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-src/.DS_Store
+/.DS_Store
+.DS_Store
 .Python
 pip-selfcheck.json
 
