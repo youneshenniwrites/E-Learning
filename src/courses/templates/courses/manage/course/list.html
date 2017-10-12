@@ -10,6 +10,7 @@
     <h3>{{ course.title }} </h3>
     <p> <a href ="{% url "course-edit" course.id %}"> Edit </a>
         <a href ="{% url "course-delete" course.id %}"> Delete </a>
+        <a href ="{% url "course-module-update" course.id %}"> Edit modules </a>
     </p> </div> {% empty %} <p> You haven't created any courses yet.</p>
   {% endfor %}
   <p>

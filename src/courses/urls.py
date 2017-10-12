@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^create/$', views.CourseCreateView.as_view(), name='course-create'),
     url(r'^(?P<pk>\d+)/edit/$', views.CourseUpdateView.as_view(), name='course-edit'),
     url(r'^(?P<pk>\d+)/delete/$', views.CourseDeleteView.as_view(), name='course-delete'),
+    url(r'^(?P<pk>\d+)/module/$', views.CourseModuleUpdateView.as_view(), name='course-module-update'),
 ]
