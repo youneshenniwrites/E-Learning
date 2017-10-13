@@ -13,5 +13,6 @@ urlpatterns = [
     url(r'^module/(?P<module_id>\d+)/content/(?P<model_name>\w+)/(?P<id>\d+)/$', views.ContentCreateUpdateView.as_view(), name='module-content-update'),
     url(r'^module/(?P<module_id>\d+)/$', views.ModuleContentListView.as_view(), name='module-content-list'),
     url(r'^content/(?P<id>\d+)/delete/$', views.ContentDeleteView.as_view(), name='module-content-delete'),
-
+    url(r'^module/order/$', views.ModuleOrderView.as_view(), name='module-order'),
+    url(r'^content/order/$', views.ContentOrderView.as_view(), name='content-order'),
 ]
