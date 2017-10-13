@@ -1,4 +1,5 @@
-
+from django.apps import apps
+from django.forms.models import modelform_factory
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.base import TemplateResponseMixin, View
@@ -9,7 +10,7 @@ from django.views.generic.edit import (CreateView,
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
 
-from .models import Course
+from .models import Course, Module, Content
 from .forms import ModuleFormset
 
 
@@ -127,3 +128,100 @@ class CourseModuleUpdateView(TemplateResponseMixin, View):
             formset.save()
             return redirect('manage_course_list')
         return self.render_to_response(context)
+
+
+class ContentCreateUpdateView(TemplateResponseMixin, View):
+    '''
+    Handles creating and updating
+    objects of any content model
+    '''
+
+    module = None
+    model = None
+    obj = None
+    template_name = 'courses/manage/content/form.html'
+
+    def get_model(self, model_name):
+        '''
+        Returns the corresponding class
+        for type of content model using
+        the built in Django apps module
+        '''
+
+        if model_name in ['text', 'video', 'image', 'file']:
+            return apps.get_model(app_label='courses',
+                                    model_name=model_name)
+        return None
+
+    def get_form(self, model, *args, **kwargs):
+        '''
+        Dynamic form for the given contents
+        '''
+
+        Form = modelform_factory(model, exclude=['owner',
+                                                    'order',
+                                                    'created',
+                                                    'updated'])
+        return Form(*args, **kwargs)
+
+    def get(self, request, module_id, model_name, id=None):
+        '''
+        Builds the model form of the instance
+        content when a GET request is received
+        '''
+
+        form = self.get_form(self.model, instance=self.obj)
+        context = {'form': form, 'object': self.obj}
+        return self.render_to_response(context)
+
+    def post(self, request, module_id, model_name, id=None):
+        '''
+        Builds a model form passing
+        any submitted data and files to it
+        '''
+
+        form = self.get_form(self.model,
+                            instance=self.obj,
+                            data=request.POST,
+                            files=request.FILES)
+        context = {'form': form, 'object': self.obj}
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+            if not id:
+                # not an update, but a new content object for the given module
+                Content.objects.create(module=self.module, item=obj)
+            return redirect('module_content_list', self.module.id)
+        return self.render_to_response(context)
+
+    def dispatch(self, request, module_id, model_name, id=None):
+        '''
+        Receives a number of arguments and
+        stores their corresponding module,
+        model and content object as class attributes
+        '''
+
+        self.module = get_object_or_404(Module,
+                                        id=module_id,
+                                        course__owner=request.user)
+        self.model = self.get_model(model_name)
+        if id:
+            self.obj = get_object_or_404(self.model,
+                                            id=id,
+                                            owner=request.user)
+        return super(ContentCreateUpdateView, self).dispatch(request,
+                                                                module_id,
+                                                                model_name, id)
+
+
+class ContentDeleteView(View):
+
+    def post(self, request, id):
+        content = get_object_or_404(Content,
+                                    id=id,
+                                    module__course__owner=request.user)
+        module = content.module
+        content.item.delete() # deletes the related video, text, image, file
+        content.delete()
+        return redirect('module_content_list', module.id)
