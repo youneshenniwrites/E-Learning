@@ -66,7 +66,7 @@ class OwnerCourseEditMixin(OwnerCourseMixin, OwnerEditMixin, LoginRequiredMixin)
     '''
 
     fields = ['subject', 'title', 'slug', 'overview']
-    success_url = reverse_lazy('manage_course_list')
+    success_url = reverse_lazy('manage-course-list')
     template_name = 'courses/manage/course/form.html'
 
 
@@ -88,7 +88,7 @@ class CourseUpdateView(PermissionRequiredMixin, OwnerCourseEditMixin, UpdateView
 
 class CourseDeleteView(PermissionRequiredMixin, OwnerCourseMixin, DeleteView):
     template_name = 'courses/manage/course/delete.html'
-    success_url = reverse_lazy('manage_course_list')
+    success_url = reverse_lazy('manage-course-list')
     permission_required = 'courses.delete_course'
 
 
@@ -126,7 +126,7 @@ class CourseModuleUpdateView(TemplateResponseMixin, View):
         context = {'course': self.course, 'formset': formset}
         if formset.is_valid():
             formset.save()
-            return redirect('manage_course_list')
+            return redirect('manage-course-list')
         return self.render_to_response(context)
 
 
@@ -192,7 +192,7 @@ class ContentCreateUpdateView(TemplateResponseMixin, View):
             if not id:
                 # not an update, but a new content object for the given module
                 Content.objects.create(module=self.module, item=obj)
-            return redirect('module_content_list', self.module.id)
+            return redirect('module-content-list', self.module.id)
         return self.render_to_response(context)
 
     def dispatch(self, request, module_id, model_name, id=None):
@@ -224,4 +224,14 @@ class ContentDeleteView(View):
         module = content.module
         content.item.delete() # deletes the related video, text, image, file
         content.delete()
-        return redirect('module_content_list', module.id)
+        return redirect('module-content-list', module.id)
+
+
+class ModuleContentListView(TemplateResponseMixin, View):
+    template_name = 'courses/manage/module/content_list.html'
+
+    def get(self, request, module_id):
+        module = get_object_or_404(Module,
+                                    id=module_id,
+                                    course__owner=request.user)
+        return self.render_to_response({'module': module})
