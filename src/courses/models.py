@@ -12,7 +12,6 @@ Subject 1
             ...
 '''
 
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -37,6 +36,7 @@ class Course(models.Model):
     each course belongs to an owner and a specific subject
     '''
 
+    student     = models.ManyToManyField(User, related_name='courses_joined', blank=True)
     owner       = models.ForeignKey(User,
                             related_name='courses_created')
     subject     = models.ForeignKey(Subject,
