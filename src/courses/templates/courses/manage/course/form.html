@@ -20,10 +20,10 @@
   <div class="module" >
     <h2> Course info </h2>
     <!-- the form is used for both creation and editing the course -->
-    <form action="." method ="post">
+    <form action="." method="post">
       {{ form.as_p }}
       {% csrf_token %}
-      <p> <input type ="submit" value ="Save course"> </p>
+      <p> <input type="submit" value="Save course"> </p>
     </form>
   </div>
 {% endblock %}

@@ -1,9 +1,11 @@
+from django.db.models import Count
 from django.apps import apps
 from django.forms.models import modelform_factory
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic.base import TemplateResponseMixin, View
 from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import (CreateView,
                                         UpdateView,
                                         DeleteView)
@@ -13,8 +15,33 @@ from django.contrib.auth.mixins import (LoginRequiredMixin,
 from braces.views import (CsrfExemptMixin,
                             JsonRequestResponseMixin)
 
-from .models import Course, Module, Content
+from .models import (Course, Module, Content, Subject)
 from .forms import ModuleFormset
+
+
+class CourseDetailView(DetailView):
+    model = Course
+    template_name = 'courses/course/detail.html'
+
+
+class CourseListView(TemplateResponseMixin, View):
+    model = Course
+    template_name = 'courses/course/list.html'
+
+    def get(self, request, subject=None):
+        # retrieves all subjects with their total number of courses
+        subjects = Subject.objects.annotate(total_courses=Count('courses'))
+        # retrieves all courses with their total number of modules
+        courses = Course.objects.annotate(total_modules=Count('modules'))
+        if subject:
+            # subject slug is provided
+            subject = get_object_or_404(Subject, slug=subject)
+            courses = courses.filter(subject=subject)
+            
+        context = {'subjects': subjects,
+                    'subject': subject,
+                    'courses': courses}
+        return self.render_to_response(context)
 
 
 class ManageCourseListView(ListView):

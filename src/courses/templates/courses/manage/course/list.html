@@ -4,15 +4,15 @@
 
 {% block content %}
 <h1> My courses </h1>
-<div class ="module">
+<div class="module">
   {% for course in object_list %}
   <div class="course-info">
     <h3>{{ course.title }} </h3>
-    <p> <a href ="{% url "course-edit" course.id %}"> Edit </a>
-        <a href ="{% url "course-delete" course.id %}"> Delete </a>
-        <a href ="{% url "course-module-update" course.id %}"> Edit modules </a>
+    <p> <a href="{% url "course-edit" course.id %}"> Edit </a>
+        <a href="{% url "course-delete" course.id %}"> Delete </a>
+        <a href="{% url "course-module-update" course.id %}"> Edit modules </a>
         {% if course.modules.count > 0 %}
-        <a href ="{% url "module-content-list" course.modules.first.id %}"> Manage contents </a>
+        <a href="{% url "module-content-list" course.modules.first.id %}"> Manage contents </a>
         {% endif %}
     </p> </div> {% empty %} <p> You haven't created any courses yet.</p>
   {% endfor %}
