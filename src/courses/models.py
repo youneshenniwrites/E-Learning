@@ -16,6 +16,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from .fields import OrderField
 
@@ -36,7 +38,7 @@ class Course(models.Model):
     each course belongs to an owner and a specific subject
     '''
 
-    student     = models.ManyToManyField(User, related_name='courses_joined', blank=True)
+    users       = models.ManyToManyField(User, related_name='courses_joined', blank=True)
     owner       = models.ForeignKey(User,
                             related_name='courses_created')
     subject     = models.ForeignKey(Subject,
@@ -106,6 +108,17 @@ class ItemBase(models.Model):
     title       = models.CharField(max_length=200)
     created     = models.DateTimeField(auto_now_add=True)
     updated     = models.DateTimeField(auto_now=True)
+
+    def render(self):
+        '''
+        a common interface for rendering
+        diverse content
+        '''
+
+        return render_to_string(
+                        'courses/content/{}.html'.format(self._meta.model_name),
+                        {'item': self}
+                        )
 
     def __str__(self):
         return str(self.title)

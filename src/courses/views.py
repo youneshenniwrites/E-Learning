@@ -18,10 +18,21 @@ from braces.views import (CsrfExemptMixin,
 from .models import (Course, Module, Content, Subject)
 from .forms import ModuleFormset
 
+from accounts.forms import CourseEnrollForm
+
 
 class CourseDetailView(DetailView):
     model = Course
     template_name = 'courses/course/detail.html'
+
+    def get_context_data(self, **kwargs):
+        '''
+        let users enroll in a given course
+        '''
+        
+        context = super(CourseDetailView, self).get_context_data(**kwargs)
+        context['enroll_form'] = CourseEnrollForm(initial={'course': self.object})
+        return context
 
 
 class CourseListView(TemplateResponseMixin, View):
@@ -37,7 +48,7 @@ class CourseListView(TemplateResponseMixin, View):
             # subject slug is provided
             subject = get_object_or_404(Subject, slug=subject)
             courses = courses.filter(subject=subject)
-            
+
         context = {'subjects': subjects,
                     'subject': subject,
                     'courses': courses}
