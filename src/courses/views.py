@@ -11,6 +11,7 @@ from django.views.generic.edit import (CreateView,
                                         DeleteView)
 from django.contrib.auth.mixins import (LoginRequiredMixin,
                                         PermissionRequiredMixin)
+from django.core.cache import cache
 
 from braces.views import (CsrfExemptMixin,
                             JsonRequestResponseMixin)
@@ -29,7 +30,7 @@ class CourseDetailView(DetailView):
         '''
         let users enroll in a given course
         '''
-        
+
         context = super(CourseDetailView, self).get_context_data(**kwargs)
         context['enroll_form'] = CourseEnrollForm(initial={'course': self.object})
         return context
@@ -41,13 +42,31 @@ class CourseListView(TemplateResponseMixin, View):
 
     def get(self, request, subject=None):
         # retrieves all subjects with their total number of courses
-        subjects = Subject.objects.annotate(total_courses=Count('courses'))
+        #subjects = Subject.objects.annotate(total_courses=Count('courses'))
+        # using low level API cache
+        subjects = cache.get('all_subjects')
+        if not subjects:
+            subjects = subjects = Subject.objects.annotate(total_courses=Count('courses'))
+            cache.set('all_subjects', subjects)
         # retrieves all courses with their total number of modules
-        courses = Course.objects.annotate(total_modules=Count('modules'))
+        all_courses = Course.objects.annotate(total_modules=Count('modules'))
         if subject:
             # subject slug is provided
             subject = get_object_or_404(Subject, slug=subject)
-            courses = courses.filter(subject=subject)
+            # dynamic key for caching dynamic data
+            key = 'subject_{}_courses'.format(subject.id)
+            courses = cache.get(key)
+            #courses = courses.filter(subject=subject)
+            if not courses:
+                # cash courses filtered by subject
+                courses = all_courses.filter(subject=subject)
+                cache.set(key, courses)
+        else:
+            # cach all courses
+            courses = cache.get('all_courses')
+            if not courses:
+                courses = all_courses
+                cache.set('all_courses', courses)
 
         context = {'subjects': subjects,
                     'subject': subject,

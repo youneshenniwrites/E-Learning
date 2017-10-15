@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load cache %}
+
 {% block title %}
   {{ object.title }}
 {% endblock %}
@@ -28,12 +30,15 @@
   </div>
 
   <div class="module">
-    {% for content in module.contents.all %}
-      {% with item=content.item %}
-      <h2>{{ item.title }} </h2>
-      {{ item.render }}
-      {% endwith %}
-    {% endfor %}
+    <!-- cashing a template fragment -->
+    {% cache 600 module_contents module %}
+      {% for content in module.contents.all %}
+        {% with item=content.item %}
+        <h2>{{ item.title }} </h2>
+        {{ item.render }}
+        {% endwith %}
+      {% endfor %}
+    {% endcache %}
   </div>
 
   {% endblock %}
