@@ -6,29 +6,40 @@ from rest_framework.views import APIView
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
+from rest_framework.decorators import detail_route
 
 from ..models import Subject, Course
-from .serializers import SubjectSerializer, CourseSerializer
+from .serializers import (SubjectSerializer,
+                            CourseSerializer,
+                            CourseWithContentSerializer)
+from .permissions import IsEnrolled
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     '''
     API viewset to both list objects
-    and retrieve a single objects
+    and retrieve a single objects.
+    detail route is a decorator that
+    will add custom actions to the viewset.
     '''
-    
+
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-
-class CourseEnrollView(APIView):
-    authentication_classes = (BasicAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request, pk, format=None):
-        course = get_object_or_404(Course, pk=pk)
+    @detail_route(methods=['post'],
+                    authentication_classes=[BasicAuthentication],
+                    permission_classes=[IsAuthenticated])
+    def enroll(self, request, *args, **kwargs):
+        course = self.get_object()
         course.users.add(request.user)
         return Response({'enrolled': True})
+
+    @detail_route(methods=['get'],
+                    serializer_class=CourseWithContentSerializer,
+                    authentication_classes=[BasicAuthentication],
+                    permission_classes=[IsAuthenticated])
+    def contents(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
 
 class SubjectListView(generics.ListAPIView):
